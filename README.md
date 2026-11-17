@@ -35,7 +35,7 @@ Los datos provienen de las encuestas telefónicas anuales del sistema **BRFSS** 
 ## 💻 Instalación y Uso
 1. Clona este repositorio:
    ```bash
-   git clone https://github.com
+   git clone https://github.com/jorgeshzhndz/Riesgo_Cardiovascular_ML
    ```
 2. Instala las dependencias necesarias:
    ```bash
