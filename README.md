@@ -14,7 +14,7 @@ Los datos provienen de las encuestas telefónicas anuales del sistema **BRFSS** 
 * **Lenguaje:** Python 3.x
 * **Análisis y Manipulación de Datos:** Pandas, NumPy
 * **Visualización:** Matplotlib, Seaborn
-* **Machine Learning:** Scikit-Learn, XGBoost, Imbalanced-learn (SMOTE)
+* **Machine Learning:** Scikit-Learn, XGBoost
 
 ## Estructura del Repositorio
 ```text
