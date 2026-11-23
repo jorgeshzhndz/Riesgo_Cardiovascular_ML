@@ -8,6 +8,7 @@ envuelta en ClasificadorRiesgo (niveles bajo / moderado / alto).
 Uso (desde la raiz del proyecto):
     python src/training.py
 """
+
 import pickle
 from pathlib import Path
 
