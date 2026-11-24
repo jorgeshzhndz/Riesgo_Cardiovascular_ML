@@ -3,18 +3,16 @@ Aplicación Web Interactivo - Predicción de Riesgo de Enfermedad Cardiovascular
 Proyecto: Predicción de Riesgo de Enfermedad Cardiovascular (ESdE 2025)
 Autor: Jorge Sánchez Hernández
 """
-import sys
 import os
+import sys
+import pickle
+from pathlib import Path
 
 # Añade la carpeta padre (Riesgo_Cardiovascular_ML) a la ruta de búsqueda de Python
 ruta_raiz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if ruta_raiz not in sys.path:
     sys.path.insert(0, ruta_raiz)
 
-
-import sys
-import pickle
-from pathlib import Path
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -23,6 +21,8 @@ import streamlit as st
 RAIZ = Path(__file__).resolve().parent
 if (RAIZ / "src").exists():
     sys.path.append(str(RAIZ / "src"))
+elif (RAIZ.parent / "src").exists():
+    sys.path.append(str(RAIZ.parent / "src"))
 else:
     sys.path.append(str(RAIZ))
 
@@ -31,25 +31,34 @@ try:
 except ImportError:
     class ClasificadorRiesgo:
         NIVELES = ["Riesgo Bajo", "Riesgo Moderado", "Riesgo Alto"]
+
         def __init__(self, pipeline, cortes=(0.2, 0.5)):
             self.pipeline = pipeline
             self.cortes = cortes
+
         def predict_score(self, X):
             return self.pipeline.predict_proba(X)[:, 1]
+
         def predict(self, X):
             p = self.predict_score(X)
-            return np.select([p < self.cortes[0], p < self.cortes[1]],
-                             self.NIVELES[:2], default=self.NIVELES[2])
+            return np.select(
+                [p < self.cortes[0], p < self.cortes[1]],
+                self.NIVELES[:2],
+                default=self.NIVELES[2],
+            )
+
         def predict_riesgo(self, X):
-            return pd.DataFrame({"score": self.predict_score(X), "nivel": self.predict(X)},
-                                index=X.index)
+            return pd.DataFrame(
+                {"score": self.predict_score(X), "nivel": self.predict(X)},
+                index=X.index,
+            )
 
 # Configuración de la página
 st.set_page_config(
     page_title="Evaluador de Riesgo Cardiovascular (ESdE 2025)",
     page_icon="🫀",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # Estilos CSS personalizados
@@ -80,19 +89,21 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+
 @st.cache_resource
 def cargar_modelo():
     """Carga el modelo serializado final_model.pkl"""
     rutas_posibles = [
         RAIZ / "models" / "final_model.pkl",
         RAIZ.parent / "models" / "final_model.pkl",
-        Path("models/final_model.pkl")
+        Path("models/final_model.pkl"),
     ]
     for ruta in rutas_posibles:
         if ruta.exists():
             with open(ruta, "rb") as f:
                 return pickle.load(f)
     return None
+
 
 def calcular_categoria_imc(imc: float) -> int:
     """Codificación estándar ESdE: 1=Peso insuficiente, 2=Normopeso, 3=Sobrepeso, 4=Obesidad"""
@@ -105,9 +116,9 @@ def calcular_categoria_imc(imc: float) -> int:
     else:
         return 4
 
+
 # Diccionarios de mapeo según códigos de la Encuesta de Salud de España (ESdE)
 MAP_SI_NO = {"No": 2, "Sí": 1}
-
 
 MAP_ESTUDIOS = {
     "Sin estudios / Primaria incompleta": 2,
@@ -116,7 +127,7 @@ MAP_ESTUDIOS = {
     "Bachillerato / BUP / COU": 5,
     "FP Grado Medio": 6,
     "FP Grado Superior": 7,
-    "Estudios Universitarios (Grado, Máster, Doctorado)": 8
+    "Estudios Universitarios (Grado, Máster, Doctorado)": 8,
 }
 
 MAP_CLASE_SOCIAL = {
@@ -125,7 +136,7 @@ MAP_CLASE_SOCIAL = {
     "III - Trabajadores cualificados no manuales": 3,
     "IV - Trabajadores cualificados manuales": 4,
     "V - Trabajadores semicualificados": 5,
-    "VI - Trabajadores no cualificados": 6
+    "VI - Trabajadores no cualificados": 6,
 }
 
 MAP_SEVERIDAD_DEP = {
@@ -133,28 +144,28 @@ MAP_SEVERIDAD_DEP = {
     "Leve": 2,
     "Moderada": 3,
     "Moderadamente grave": 4,
-    "Grave": 5
+    "Grave": 5,
 }
 
 MAP_FUMA = {
     "Sí, fumo a diario": 1,
     "Sí, fumo pero no a diario": 2,
     "No fumo actualmente, pero he fumado antes (Exfumador)": 3,
-    "No fumo ni he fumado nunca": 4
+    "No fumo ni he fumado nunca": 4,
 }
 
 MAP_HUMO_AJENO = {
     "Nunca o casi nunca": 1,
     "Menos de 1 hora al día": 2,
     "De 1 a 5 horas al día": 3,
-    "Más de 5 horas al día": 4
+    "Más de 5 horas al día": 4,
 }
 
 MAP_VAPEO = {
     "A diario": 1,
     "De forma ocasional": 2,
     "En el pasado (ya no)": 3,
-    "Nunca": 4
+    "Nunca": 4,
 }
 
 MAP_ALCOHOL = {
@@ -165,21 +176,21 @@ MAP_ALCOHOL = {
     "2-3 días al mes": 5,
     "Una vez al mes": 6,
     "Menos de una vez al mes": 7,
-    "No en los últimos 12 meses / Nunca": 8
+    "No en los últimos 12 meses / Nunca": 8,
 }
 
 MAP_ACT_TRABAJO = {
     "Sentado la mayor parte de la jornada": 1,
     "De pie la mayor parte del tiempo sin grandes desplazamientos": 2,
     "Caminando, llevando algún peso o desplazándose con frecuencia": 3,
-    "Realizando tareas que requieren gran esfuerzo físico": 4
+    "Realizando tareas que requieren gran esfuerzo físico": 4,
 }
 
 MAP_EJERCICIO_OCIO = {
     "No hago ejercicio (tiempo libre casi completamente sedentario)": 1,
     "Hago alguna actividad física o deportiva ocasional": 2,
     "Hago actividad física varias veces al mes": 3,
-    "Hago entrenamiento deportivo o físico varias veces a la semana": 4
+    "Hago entrenamiento deportivo o físico varias veces a la semana": 4,
 }
 
 MAP_DIETA = {
@@ -187,7 +198,7 @@ MAP_DIETA = {
     "De 4 a 6 veces por semana": 2,
     "De 1 a 3 veces por semana": 3,
     "Menos de una vez a la semana": 4,
-    "Nunca": 5
+    "Nunca": 5,
 }
 
 # --- CABECERA ---
@@ -226,13 +237,13 @@ with st.sidebar:
 
     estudios_sel = st.selectbox("Nivel de estudios", list(MAP_ESTUDIOS.keys()), index=4)
     clase_sel = st.selectbox("Clase social ocupacional", list(MAP_CLASE_SOCIAL.keys()), index=2)
-    
+
 # --- FORMULARIO PRINCIPAL EN PESTAÑAS ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "🩺 1. Antecedentes Clínicos",
     "🚬 2. Tabaco y Alcohol",
     "🏃 3. Actividad Física",
-    "🥗 4. Hábitos Alimentarios"
+    "🥗 4. Hábitos Alimentarios",
 ])
 
 with tab1:
@@ -262,10 +273,6 @@ with tab2:
         vapeo_sel = st.selectbox("Uso de cigarrillos electrónicos / vapeo", list(MAP_VAPEO.keys()), index=3)
     with c2:
         alcohol_sel = st.selectbox("Frecuencia de consumo de alcohol", list(MAP_ALCOHOL.keys()), index=4)
-        if MAP_ALCOHOL[alcohol_sel] == 8:
-            atracon_sel = "No consume alcohol"
-            st.selectbox("Frecuencia de consumo intensivo (atracón)", ["No consume alcohol"], disabled=True)
-
 
 with tab3:
     st.subheader("Actividad física y sedentarismo")
@@ -299,7 +306,6 @@ st.divider()
 
 # --- BOTÓN DE PREDICCIÓN Y RESULTADOS ---
 if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_container_width=True):
-    # Construcción exacta del DataFrame con los nombres esperados por el pipeline
     datos_paciente = pd.DataFrame([{
         # Numéricas
         "edad": float(edad),
@@ -348,7 +354,6 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
     score = float(resultado["score"])
     nivel = str(resultado["nivel"])
 
-    # Selección de estilo según nivel
     if nivel == "Riesgo Bajo":
         css_class = "risk-low"
         icono = "✅"
@@ -381,7 +386,7 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
                 <p style="margin:0; font-size: 0.95rem;">Índice de riesgo estimado (Score)</p>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
         st.progress(min(max(score, 0.0), 1.0))
 
@@ -397,3 +402,4 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
             "**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) "
             "y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario."
         )
+
