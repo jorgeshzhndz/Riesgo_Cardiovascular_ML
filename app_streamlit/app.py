@@ -699,119 +699,98 @@ if st.button(
             "para valorar los factores de riesgo y las medidas preventivas "
             "adecuadas."
         )
-
+    
 
     # --------------------------------------------------------
     # PRESENTACIÓN DE RESULTADOS
     # --------------------------------------------------------
 
-    st.divider()
-
-    st.header("📊 Resultado de la evaluación")
-
     col_res1, col_res2 = st.columns([1.2, 1.8])
-
-
-    # --------------------------------------------------------
-    # COLUMNA IZQUIERDA: SCORE Y SEMÁFORO
-    # --------------------------------------------------------
 
     with col_res1:
 
-        st.subheader("Resultado")
+        # Tarjeta de riesgo con color según el resultado
+        colores = {
+            "Riesgo Bajo": {
+                "fondo": "#e8f5e9",
+                "borde": "#2e7d32",
+                "texto": "#1b5e20",
+                "icono": "✅"
+            },
+            "Riesgo Moderado": {
+                "fondo": "#fff8e1",
+                "borde": "#f57f17",
+                "texto": "#e65100",
+                "icono": "⚠️"
+            },
+            "Riesgo Alto": {
+                "fondo": "#ffebee",
+                "borde": "#c62828",
+                "texto": "#b71c1c",
+                "icono": "🚨"
+            }
+        }
 
-        if nivel == "Riesgo Bajo":
-            st.success("🟢 Riesgo Bajo")
+        estilo = colores[nivel]
 
-        elif nivel == "Riesgo Moderado":
-            st.warning("🟡 Riesgo Moderado")
+        st.markdown(
+            f"""
+            <div style="
+                background-color: {estilo['fondo']};
+                border-left: 8px solid {estilo['borde']};
+                border-radius: 12px;
+                padding: 24px;
+                text-align: center;
+                margin-bottom: 20px;
+            ">
+                <h2 style="
+                    color: {estilo['texto']};
+                    margin: 0;
+                    font-size: 1.5rem;
+                ">
+                    {estilo['icono']} {nivel}
+                </h2>
 
-        else:
-            st.error("🔴 Riesgo Alto")
+                <p style="
+                    color: {estilo['texto']};
+                    font-size: 2.5rem;
+                    font-weight: bold;
+                    margin: 12px 0;
+                ">
+                    {score:.1%}
+                </p>
 
-
-        st.metric(
-            label="Índice de riesgo estimado",
-            value=f"{score:.1%}"
+                <p style="
+                    color: {estilo['texto']};
+                    margin: 0;
+                    font-size: 0.95rem;
+                ">
+                    Índice de riesgo estimado (Score)
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
-        st.progress(
-            min(max(score, 0.0), 1.0)
-        )
-
-        st.subheader("Semáforo de riesgo")
-
-
-        # Riesgo bajo
-        if nivel == "Riesgo Bajo":
-
-            st.success(
-                f"🟢 RIESGO BAJO — inferior a {corte_bajo:.0%}"
-            )
-
-        else:
-
-            st.write(
-                f"🟢 Riesgo bajo: < {corte_bajo:.0%}"
-            )
-
-
-        # Riesgo moderado
-        if nivel == "Riesgo Moderado":
-
-            st.warning(
-                f"🟡 RIESGO MODERADO — "
-                f"{corte_bajo:.0%} a {corte_alto:.0%}"
-            )
-
-        else:
-
-            st.write(
-                f"🟡 Riesgo moderado: "
-                f"{corte_bajo:.0%} – {corte_alto:.0%}"
-            )
-
-
-        # Riesgo alto
-        if nivel == "Riesgo Alto":
-
-            st.error(
-                f"🔴 RIESGO ALTO — igual o superior a {corte_alto:.0%}"
-            )
-
-        else:
-
-            st.write(
-                f"🔴 Riesgo alto: ≥ {corte_alto:.0%}"
-            )
-
-
-    # --------------------------------------------------------
-    # COLUMNA DERECHA: INTERPRETACIÓN
-    # --------------------------------------------------------
+        st.progress(min(max(score, 0.0), 1.0))
 
     with col_res2:
 
-        st.subheader("Interpretación orientativa")
+        st.subheader("Interpretación Clínica Orientativa")
 
         st.write(recomendacion)
 
         st.caption(
             f"Umbrales del clasificador: "
-            f"Bajo (< {corte_bajo:.0%}) | "
-            f"Moderado ({corte_bajo:.0%} – {corte_alto:.0%}) | "
-            f"Alto (≥ {corte_alto:.0%})."
+            f"Riesgo Bajo (< {corte_bajo:.0%}) | "
+            f"Riesgo Moderado ({corte_bajo:.0%} – {corte_alto:.0%}) | "
+            f"Riesgo Alto (≥ {corte_alto:.0%})."
         )
 
         st.warning(
-            "**Estimación orientativa (no es un diagnóstico médico):** "
-            "Este porcentaje refleja la puntuación generada por el modelo "
-            "para el perfil introducido. No debe interpretarse como una "
-            "probabilidad clínica real ni como una predicción individual "
-            "del desarrollo futuro de una enfermedad cardiovascular. "
-            "Consulta siempre con un profesional sanitario."
+            "**Aviso:** El resultado es una estimación estadística del modelo, "
+            "no una probabilidad clínica individual ni un diagnóstico médico."
         )
-
 
 # ============================================================
 # AVISO FINAL
