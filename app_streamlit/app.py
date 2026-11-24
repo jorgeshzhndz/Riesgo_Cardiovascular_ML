@@ -3,62 +3,25 @@ Aplicación Web Interactivo - Predicción de Riesgo de Enfermedad Cardiovascular
 Proyecto: Predicción de Riesgo de Enfermedad Cardiovascular (ESdE 2025)
 Autor: Jorge Sánchez Hernández
 """
-import os
 import sys
 import pickle
 from pathlib import Path
-
-# Añade la carpeta padre (Riesgo_Cardiovascular_ML) a la ruta de búsqueda de Python
-ruta_raiz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if ruta_raiz not in sys.path:
-    sys.path.insert(0, ruta_raiz)
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-# Configuración de rutas para importar ClasificadorRiesgo desde src/
-RAIZ = Path(__file__).resolve().parent
-if (RAIZ / "src").exists():
-    sys.path.append(str(RAIZ / "src"))
-elif (RAIZ.parent / "src").exists():
-    sys.path.append(str(RAIZ.parent / "src"))
-else:
-    sys.path.append(str(RAIZ))
+RAIZ = Path(__file__).resolve().parent.parent   # raíz del proyecto
+sys.path.insert(0, str(RAIZ / "src"))
 
-try:
-    from riesgo import ClasificadorRiesgo
-except ImportError:
-    class ClasificadorRiesgo:
-        NIVELES = ["Riesgo Bajo", "Riesgo Moderado", "Riesgo Alto"]
-
-        def __init__(self, pipeline, cortes=(0.2, 0.5)):
-            self.pipeline = pipeline
-            self.cortes = cortes
-
-        def predict_score(self, X):
-            return self.pipeline.predict_proba(X)[:, 1]
-
-        def predict(self, X):
-            p = self.predict_score(X)
-            return np.select(
-                [p < self.cortes[0], p < self.cortes[1]],
-                self.NIVELES[:2],
-                default=self.NIVELES[2],
-            )
-
-        def predict_riesgo(self, X):
-            return pd.DataFrame(
-                {"score": self.predict_score(X), "nivel": self.predict(X)},
-                index=X.index,
-            )
+from riesgo import ClasificadorRiesgo 
 
 # Configuración de la página
 st.set_page_config(
     page_title="Evaluador de Riesgo Cardiovascular (ESdE 2025)",
     page_icon="🫀",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
 # Estilos CSS personalizados
@@ -86,24 +49,51 @@ st.markdown("""
         border-left: 8px solid #c62828;
         color: #b71c1c;
     }
+    .semaforo-box {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(128, 128, 128, 0.25);
+        background-color: rgba(128, 128, 128, 0.06);
+    }
+    .semaforo-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        margin: 4px 0;
+        border-radius: 7px;
+        font-size: 0.88rem;
+        opacity: 0.48;
+    }
+    .semaforo-item.activo {
+        opacity: 1;
+        font-weight: 700;
+        border: 1px solid currentColor;
+    }
+    .sem-bajo {
+        background-color: rgba(46, 125, 50, 0.16);
+        color: #2e7d32;
+    }
+    .sem-mod {
+        background-color: rgba(245, 127, 23, 0.18);
+        color: #f57f17;
+    }
+    .sem-alto {
+        background-color: rgba(198, 40, 40, 0.18);
+        color: #c62828;
+    }
     </style>
 """, unsafe_allow_html=True)
-
 
 @st.cache_resource
 def cargar_modelo():
     """Carga el modelo serializado final_model.pkl"""
-    rutas_posibles = [
-        RAIZ / "models" / "final_model.pkl",
-        RAIZ.parent / "models" / "final_model.pkl",
-        Path("models/final_model.pkl"),
-    ]
-    for ruta in rutas_posibles:
-        if ruta.exists():
-            with open(ruta, "rb") as f:
-                return pickle.load(f)
+    ruta = RAIZ / "models" / "final_model.pkl"
+    if ruta.exists():
+        with open(ruta, "rb") as f:
+            return pickle.load(f)
     return None
-
 
 def calcular_categoria_imc(imc: float) -> int:
     """Codificación estándar ESdE: 1=Peso insuficiente, 2=Normopeso, 3=Sobrepeso, 4=Obesidad"""
@@ -116,9 +106,16 @@ def calcular_categoria_imc(imc: float) -> int:
     else:
         return 4
 
-
 # Diccionarios de mapeo según códigos de la Encuesta de Salud de España (ESdE)
 MAP_SI_NO = {"No": 2, "Sí": 1}
+
+MAP_CCAA = {
+    "Andalucía": 1, "Aragón": 2, "Asturias, Principado de": 3, "Balears, Illes": 4,
+    "Canarias": 5, "Cantabria": 6, "Castilla y León": 7, "Castilla-La Mancha": 8,
+    "Cataluña": 9, "Comunitat Valenciana": 10, "Extremadura": 11, "Galicia": 12,
+    "Madrid, Comunidad de": 13, "Murcia, Región de": 14, "Navarra, Comunidad Foral de": 15,
+    "País Vasco": 16, "Rioja, La": 17, "Ceuta": 18, "Melilla": 19
+}
 
 MAP_ESTUDIOS = {
     "Sin estudios / Primaria incompleta": 2,
@@ -127,7 +124,7 @@ MAP_ESTUDIOS = {
     "Bachillerato / BUP / COU": 5,
     "FP Grado Medio": 6,
     "FP Grado Superior": 7,
-    "Estudios Universitarios (Grado, Máster, Doctorado)": 8,
+    "Estudios Universitarios (Grado, Máster, Doctorado)": 8
 }
 
 MAP_CLASE_SOCIAL = {
@@ -136,7 +133,7 @@ MAP_CLASE_SOCIAL = {
     "III - Trabajadores cualificados no manuales": 3,
     "IV - Trabajadores cualificados manuales": 4,
     "V - Trabajadores semicualificados": 5,
-    "VI - Trabajadores no cualificados": 6,
+    "VI - Trabajadores no cualificados": 6
 }
 
 MAP_SEVERIDAD_DEP = {
@@ -144,28 +141,34 @@ MAP_SEVERIDAD_DEP = {
     "Leve": 2,
     "Moderada": 3,
     "Moderadamente grave": 4,
-    "Grave": 5,
+    "Grave": 5
+}
+
+MAP_APOYO = {
+    "Mucho apoyo (3 o más personas cercanas)": 1,
+    "Algo de apoyo (1 o 2 personas cercanas)": 2,
+    "Ningún apoyo (0 personas)": 3
 }
 
 MAP_FUMA = {
     "Sí, fumo a diario": 1,
     "Sí, fumo pero no a diario": 2,
     "No fumo actualmente, pero he fumado antes (Exfumador)": 3,
-    "No fumo ni he fumado nunca": 4,
+    "No fumo ni he fumado nunca": 4
 }
 
 MAP_HUMO_AJENO = {
     "Nunca o casi nunca": 1,
     "Menos de 1 hora al día": 2,
     "De 1 a 5 horas al día": 3,
-    "Más de 5 horas al día": 4,
+    "Más de 5 horas al día": 4
 }
 
 MAP_VAPEO = {
     "A diario": 1,
     "De forma ocasional": 2,
     "En el pasado (ya no)": 3,
-    "Nunca": 4,
+    "Nunca": 4
 }
 
 MAP_ALCOHOL = {
@@ -176,21 +179,30 @@ MAP_ALCOHOL = {
     "2-3 días al mes": 5,
     "Una vez al mes": 6,
     "Menos de una vez al mes": 7,
-    "No en los últimos 12 meses / Nunca": 8,
+    "No en los últimos 12 meses / Nunca": 8
+}
+
+MAP_ATRACON = {
+    "A diario o casi a diario": 1,
+    "Semanalmente": 2,
+    "Mensualmente": 3,
+    "Menos de una vez al mes": 4,
+    "Nunca": 5,
+    "No consume alcohol": 8
 }
 
 MAP_ACT_TRABAJO = {
     "Sentado la mayor parte de la jornada": 1,
     "De pie la mayor parte del tiempo sin grandes desplazamientos": 2,
     "Caminando, llevando algún peso o desplazándose con frecuencia": 3,
-    "Realizando tareas que requieren gran esfuerzo físico": 4,
+    "Realizando tareas que requieren gran esfuerzo físico": 4
 }
 
 MAP_EJERCICIO_OCIO = {
     "No hago ejercicio (tiempo libre casi completamente sedentario)": 1,
     "Hago alguna actividad física o deportiva ocasional": 2,
     "Hago actividad física varias veces al mes": 3,
-    "Hago entrenamiento deportivo o físico varias veces a la semana": 4,
+    "Hago entrenamiento deportivo o físico varias veces a la semana": 4
 }
 
 MAP_DIETA = {
@@ -198,7 +210,7 @@ MAP_DIETA = {
     "De 4 a 6 veces por semana": 2,
     "De 1 a 3 veces por semana": 3,
     "Menos de una vez a la semana": 4,
-    "Nunca": 5,
+    "Nunca": 5
 }
 
 # --- CABECERA ---
@@ -235,15 +247,17 @@ with st.sidebar:
     etiquetas_imc = {1: "Bajo peso", 2: "Normopeso", 3: "Sobrepeso", 4: "Obesidad"}
     st.info(f"**IMC calculado:** {imc:.1f} kg/m² ({etiquetas_imc[imc_cat]})")
 
+    ccaa_sel = st.selectbox("Comunidad Autónoma", list(MAP_CCAA.keys()), index=9)
     estudios_sel = st.selectbox("Nivel de estudios", list(MAP_ESTUDIOS.keys()), index=4)
     clase_sel = st.selectbox("Clase social ocupacional", list(MAP_CLASE_SOCIAL.keys()), index=2)
+    apoyo_sel = st.selectbox("Apoyo social percibido", list(MAP_APOYO.keys()), index=0)
 
 # --- FORMULARIO PRINCIPAL EN PESTAÑAS ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "🩺 1. Antecedentes Clínicos",
     "🚬 2. Tabaco y Alcohol",
     "🏃 3. Actividad Física",
-    "🥗 4. Hábitos Alimentarios",
+    "🥗 4. Hábitos Alimentarios"
 ])
 
 with tab1:
@@ -269,10 +283,20 @@ with tab2:
     c1, c2 = st.columns(2)
     with c1:
         fuma_sel = st.selectbox("Consumo de tabaco", list(MAP_FUMA.keys()), index=3)
+        if MAP_FUMA[fuma_sel] in [1, 2]:
+            cigarrillos_dia = st.number_input("Cigarrillos al día (media)", min_value=1, max_value=80, value=10)
+        else:
+            cigarrillos_dia = 0
         humo_sel = st.selectbox("Exposición diaria al humo de tabaco ajeno", list(MAP_HUMO_AJENO.keys()))
         vapeo_sel = st.selectbox("Uso de cigarrillos electrónicos / vapeo", list(MAP_VAPEO.keys()), index=3)
     with c2:
         alcohol_sel = st.selectbox("Frecuencia de consumo de alcohol", list(MAP_ALCOHOL.keys()), index=4)
+        if MAP_ALCOHOL[alcohol_sel] == 8:
+            atracon_sel = "No consume alcohol"
+            st.selectbox("Frecuencia de consumo intensivo (atracón)", ["No consume alcohol"], disabled=True)
+        else:
+            opciones_atracon = [k for k in MAP_ATRACON.keys() if k != "No consume alcohol"]
+            atracon_sel = st.selectbox("Frecuencia de consumo intensivo (atracón)", opciones_atracon, index=4)
 
 with tab3:
     st.subheader("Actividad física y sedentarismo")
@@ -306,11 +330,13 @@ st.divider()
 
 # --- BOTÓN DE PREDICCIÓN Y RESULTADOS ---
 if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_container_width=True):
+    # Construcción exacta del DataFrame con los nombres esperados por el pipeline
     datos_paciente = pd.DataFrame([{
         # Numéricas
         "edad": float(edad),
         "imc": float(imc),
         "sentado_h": float(sentado_h),
+        "cigarrillos_dia": float(cigarrillos_dia),
         "dias_camina": float(dias_camina),
         "dias_deporte": float(dias_deporte),
         "dias_fuerza": float(dias_fuerza),
@@ -342,18 +368,22 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
         "clase_social": MAP_CLASE_SOCIAL[clase_sel],
         "ejercicio_ocio": MAP_EJERCICIO_OCIO[ej_ocio_sel],
         "severidad_depresiva": MAP_SEVERIDAD_DEP[sev_dep_sel],
+        "apoyo_personas": MAP_APOYO[apoyo_sel],
         "fuma": MAP_FUMA[fuma_sel],
         "frec_alcohol": MAP_ALCOHOL[alcohol_sel],
+        "frec_atracon_alcohol": MAP_ATRACON[atracon_sel],
         "actividad_trabajo": MAP_ACT_TRABAJO[act_trabajo_sel],
         "vapeo": MAP_VAPEO[vapeo_sel],
         "humo_ajeno": MAP_HUMO_AJENO[humo_sel],
         "imc_categoria": int(imc_cat),
+        "ccaa": MAP_CCAA[ccaa_sel],
     }])
 
     resultado = modelo.predict_riesgo(datos_paciente).iloc[0]
     score = float(resultado["score"])
     nivel = str(resultado["nivel"])
 
+    # Selección de estilo según nivel
     if nivel == "Riesgo Bajo":
         css_class = "risk-low"
         icono = "✅"
@@ -376,6 +406,13 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
             "Se aconseja valoración médica prioritaria para control estricto de comorbilidades y prevención secundaria/primaria intensiva."
         )
 
+    corte_bajo = modelo.cortes[0]
+    corte_alto = modelo.cortes[1]
+
+    activo_bajo = "activo" if nivel == "Riesgo Bajo" else ""
+    activo_mod = "activo" if nivel == "Riesgo Moderado" else ""
+    activo_alto = "activo" if nivel == "Riesgo Alto" else ""
+
     col_res1, col_res2 = st.columns([1.2, 1.8])
     with col_res1:
         st.markdown(
@@ -386,26 +423,42 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
                 <p style="margin:0; font-size: 0.95rem;">Índice de riesgo estimado (Score)</p>
             </div>
             """,
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
         st.progress(min(max(score, 0.0), 1.0))
+
+        st.markdown(
+            f"""
+            <div class="semaforo-box">
+                <div class="semaforo-item sem-bajo {activo_bajo}">
+                    <span>🟢 Riesgo Bajo</span>
+                    <span>&lt; {corte_bajo:.0%}</span>
+                </div>
+                <div class="semaforo-item sem-mod {activo_mod}">
+                    <span>🟡 Riesgo Moderado</span>
+                    <span>{corte_bajo:.0%} – {corte_alto:.0%}</span>
+                </div>
+                <div class="semaforo-item sem-alto {activo_alto}">
+                    <span>🔴 Riesgo Alto</span>
+                    <span>&ge; {corte_alto:.0%}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
     with col_res2:
         st.subheader("Interpretación Clínica Orientativa")
         st.write(recomendacion)
-        st.caption(
-            f"Umbrales del clasificador: Riesgo Bajo (< {modelo.cortes[0]:.0%}) | "
-            f"Riesgo Moderado ({modelo.cortes[0]:.0%} – {modelo.cortes[1]:.0%}) | "
-            f"Riesgo Alto (≥ {modelo.cortes[1]:.0%})."
-        )
         st.warning(
-            "**⚠️Estimación orientativa (no es un diagnóstico médico):** Este porcentaje refleja el grado "
-                "de similitud de tu perfil con casos de enfermedad cardiovascular en la Encuesta de "
-                "Salud de España 2025. Debido al ajuste estadístico del modelo, debe interpretarse "
-                "como un indicador relativo para comparar perfiles y **NO** como una probabilidad clínica "
-                "real ni una predicción a futuro. Consulta siempre con un profesional sanitario."
+            "⚠️ **Estimación orientativa (no es un diagnóstico médico):** Este porcentaje refleja "
+            "el grado de similitud de tu perfil con casos de enfermedad cardiovascular en la Encuesta "
+            "de Salud de España 2025. Debido al ajuste estadístico del modelo, debe interpretarse como "
+            "un indicador relativo para comparar perfiles y **NO** como una probabilidad clínica real ni una "
+            "predicción a futuro. Consulta siempre con un profesional sanitario."
         )
 
+st.divider()
 st.caption(
     "**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) "
     "y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario. "
