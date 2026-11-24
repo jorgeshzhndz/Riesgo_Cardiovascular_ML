@@ -394,9 +394,11 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
             f"Riesgo Moderado ({modelo.cortes[0]:.0%} – {modelo.cortes[1]:.0%}) | "
             f"Riesgo Alto (≥ {modelo.cortes[1]:.0%})."
         )
-        st.warning(
-            "**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) "
-            "y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario.La aplicación sigue en desarrollo y el resultado puede ser **incorrecto**"
+        st.warning("⚠️ **Estimación orientativa (no es un diagnóstico médico):** Este porcentaje refleja "
+    "el grado de similitud de tu perfil con casos de enfermedad cardiovascular en la Encuesta "
+    "de Salud de España 2025. Debido al ajuste estadístico del modelo, debe interpretarse como "
+    "un indicador relativo para comparar perfiles y **NO** como una probabilidad clínica real ni una "
+    "predicción a futuro. Consulta siempre con un profesional sanitario."
         )
 
 '''**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario. La aplicación sigue en desarrollo y el resultado puede ser **incorrecto**'''
