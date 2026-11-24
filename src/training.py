@@ -8,6 +8,7 @@ envuelta en ClasificadorRiesgo (niveles bajo / moderado / alto).
 Uso (desde la raiz del proyecto):
     python src/training.py
 """
+
 import pickle
 from pathlib import Path
 
@@ -42,13 +43,13 @@ COLS_RIESGO = ["tension_alta", "colesterol_alto", "diabetes", "epoc", "problemas
 COLS_DIETA = ["dieta_fruta", "dieta_verdura", "dieta_legumbres", "dieta_pescado",
               "dieta_carne_procesada", "dieta_dulces", "dieta_refrescos",
               "dieta_comida_rapida", "dieta_aperitivos"]
-COLS_NUM = ["edad", "imc", "sentado_h", "cigarrillos_dia",
+COLS_NUM = ["edad", "imc", "sentado_h",
             "dias_camina", "dias_deporte", "dias_fuerza"]
 COLS_BIN = ["mujer"]
 COLS_CAT = (COLS_RIESGO + COLS_DIETA +
             ["nivel_estudios", "clase_social", "ejercicio_ocio", "severidad_depresiva",
-             "apoyo_personas", "fuma", "frec_alcohol", "frec_atracon_alcohol",
-             "actividad_trabajo", "vapeo", "humo_ajeno", "imc_categoria", "ccaa"])
+            "fuma", "frec_alcohol",
+             "actividad_trabajo", "vapeo", "humo_ajeno", "imc_categoria"])
 
 
 # ------------------------------------------------------------------- datos

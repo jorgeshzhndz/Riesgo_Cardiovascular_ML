@@ -26,7 +26,6 @@ NOMBRES_VARIABLES = {
     "SEXOa": "sexo",
     "NIVEST": "nivel_estudios",
     "CLASE_PR": "clase_social",
-    "CCAA": "ccaa",
 
     # Cálculo del IMC
     "N1": "altura_cm",
@@ -50,13 +49,11 @@ NOMBRES_VARIABLES = {
 
     # Tabaco
     "Q1": "fuma",
-    "Q2": "cigarrillos_dia",
     "Q6": "humo_ajeno",
     "Q8": "vapeo",
 
     # Alcohol
     "R1": "frec_alcohol",
-    "R3": "frec_atracon_alcohol",
 
     # Ejercicio y sedentarismo
     "O1": "actividad_trabajo",
@@ -77,9 +74,6 @@ NOMBRES_VARIABLES = {
     "P1_13": "dieta_refrescos",
     "P1_14": "dieta_comida_rapida",
     "P1_15": "dieta_aperitivos",
-
-    # Apoyo social
-    "S1": "apoyo_personas",
 }
 
 
@@ -147,15 +141,9 @@ def limpiar_datos(
         ]
     )
     cols_99 = [
-        "nivel_estudios", "frec_alcohol", "frec_atracon_alcohol",
-        "cigarrillos_dia", "sentado_h", "sentado_min",
+        "nivel_estudios", "frec_atracon_alcohol", "sentado_h", "sentado_min",
     ]
     cols_999 = ["edad", "altura_cm", "peso_kg"]
-
-    # 3. Tratamiento de blancos por flujo en alcohol
-    sin_beber = df["frec_atracon_alcohol"].isna() & df["frec_alcohol"].isin([8, 9])
-    df.loc[sin_beber, "frec_atracon_alcohol"] = df.loc[sin_beber, "frec_alcohol"]
-    df["frec_atracon_alcohol"] = df["frec_atracon_alcohol"].fillna(99)
 
     # 4. Sustitución de códigos "No contesta" (9, 99, 999) por NaN
     df[cols_9] = df[cols_9].replace(9, np.nan)
