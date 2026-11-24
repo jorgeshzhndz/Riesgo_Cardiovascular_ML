@@ -396,7 +396,7 @@ if st.button("🔍 Calcular Riesgo Cardiovascular", type="primary", use_containe
         )
         st.warning(
             "**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) "
-            "y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario."
+            "y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario.La aplicación sigue en desarrollo y el resultado puede ser **incorrecto**"
         )
 
-'''Para activar: streamlit run app_streamlit/app.py'''
+'''**Aviso:** Esta aplicación es una herramienta estadística de apoyo basada en datos poblacionales (ESdE 2025) y **no sustituye** el criterio ni el diagnóstico de un profesional sanitario. La aplicación sigue en desarrollo y el resultado puede ser **incorrecto**'''
