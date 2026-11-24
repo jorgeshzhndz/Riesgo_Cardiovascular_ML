@@ -2,7 +2,6 @@
 """
 Aplicación Web Interactiva - Predicción de Riesgo de Enfermedad Cardiovascular
 Proyecto: Predicción de Riesgo de Enfermedad Cardiovascular (ESdE 2025)
-Autor: Jorge Sánchez Hernández
 """
 
 import os
@@ -19,11 +18,6 @@ import streamlit as st
 # CONFIGURACIÓN DE RUTAS
 # ============================================================
 
-ruta_raiz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
-if ruta_raiz not in sys.path:
-    sys.path.insert(0, ruta_raiz)
-
 RAIZ = Path(__file__).resolve().parent
 
 if (RAIZ / "src").exists():
@@ -33,6 +27,10 @@ elif (RAIZ.parent / "src").exists():
 else:
     sys.path.append(str(RAIZ))
 
+
+# ============================================================
+# IMPORTAR CLASE DEL MODELO
+# ============================================================
 
 try:
     from riesgo import ClasificadorRiesgo
@@ -56,17 +54,14 @@ except ImportError:
             return np.select(
                 [p < self.cortes[0], p < self.cortes[1]],
                 self.NIVELES[:2],
-                default=self.NIVELES[2],
+                default=self.NIVELES[2]
             )
 
         def predict_riesgo(self, X):
-            return pd.DataFrame(
-                {
-                    "score": self.predict_score(X),
-                    "nivel": self.predict(X)
-                },
-                index=X.index,
-            )
+            return pd.DataFrame({
+                "score": self.predict_score(X),
+                "nivel": self.predict(X)
+            }, index=X.index)
 
 
 # ============================================================
@@ -77,7 +72,7 @@ st.set_page_config(
     page_title="Evaluador de Riesgo Cardiovascular (ESdE 2025)",
     page_icon="🫀",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="expanded"
 )
 
 
@@ -86,75 +81,15 @@ st.set_page_config(
 # ============================================================
 
 st.markdown("""
-    <style>
+<style>
 
-    .risk-card {
-        padding: 24px;
-        border-radius: 12px;
-        text-align: center;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    .stButton > button {
+        width: 100%;
+        border-radius: 8px;
+        font-weight: bold;
     }
 
-    .risk-low {
-        background-color: #e8f5e9;
-        border-left: 8px solid #2e7d32;
-        color: #1b5e20;
-    }
-
-    .risk-mod {
-        background-color: #fff8e1;
-        border-left: 8px solid #f57f17;
-        color: #e65100;
-    }
-
-    .risk-high {
-        background-color: #ffebee;
-        border-left: 8px solid #c62828;
-        color: #b71c1c;
-    }
-
-    .semaforo-box {
-        margin-top: 12px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px solid rgba(128, 128, 128, 0.25);
-        background-color: rgba(128, 128, 128, 0.06);
-    }
-
-    .semaforo-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 10px;
-        margin: 5px 0;
-        border-radius: 7px;
-        font-size: 0.9rem;
-        opacity: 0.45;
-    }
-
-    .semaforo-item.activo {
-        opacity: 1;
-        font-weight: 700;
-        border: 2px solid currentColor;
-    }
-
-    .sem-bajo {
-        background-color: rgba(46, 125, 50, 0.16);
-        color: #2e7d32;
-    }
-
-    .sem-mod {
-        background-color: rgba(245, 127, 23, 0.18);
-        color: #f57f17;
-    }
-
-    .sem-alto {
-        background-color: rgba(198, 40, 40, 0.18);
-        color: #c62828;
-    }
-
-    </style>
+</style>
 """, unsafe_allow_html=True)
 
 
@@ -165,12 +100,10 @@ st.markdown("""
 @st.cache_resource
 def cargar_modelo():
 
-    """Carga el modelo serializado final_model.pkl"""
-
     rutas_posibles = [
         RAIZ / "models" / "final_model.pkl",
         RAIZ.parent / "models" / "final_model.pkl",
-        Path("models/final_model.pkl"),
+        Path("models/final_model.pkl")
     ]
 
     for ruta in rutas_posibles:
@@ -187,10 +120,10 @@ def cargar_modelo():
 # FUNCIONES AUXILIARES
 # ============================================================
 
-def calcular_categoria_imc(imc: float) -> int:
+def calcular_categoria_imc(imc):
 
     """
-    Codificación estándar ESdE:
+    Codificación:
     1 = Peso insuficiente
     2 = Normopeso
     3 = Sobrepeso
@@ -199,13 +132,10 @@ def calcular_categoria_imc(imc: float) -> int:
 
     if imc < 18.5:
         return 1
-
-    elif imc < 25.0:
+    elif imc < 25:
         return 2
-
-    elif imc < 30.0:
+    elif imc < 30:
         return 3
-
     else:
         return 4
 
@@ -219,7 +149,6 @@ MAP_SI_NO = {
     "Sí": 1
 }
 
-
 MAP_ESTUDIOS = {
     "Sin estudios / Primaria incompleta": 2,
     "Educación Primaria": 3,
@@ -227,9 +156,8 @@ MAP_ESTUDIOS = {
     "Bachillerato / BUP / COU": 5,
     "FP Grado Medio": 6,
     "FP Grado Superior": 7,
-    "Estudios Universitarios (Grado, Máster, Doctorado)": 8,
+    "Estudios Universitarios (Grado, Máster, Doctorado)": 8
 }
-
 
 MAP_CLASE_SOCIAL = {
     "I - Directivos y profesionales universitarios": 1,
@@ -237,42 +165,37 @@ MAP_CLASE_SOCIAL = {
     "III - Trabajadores cualificados no manuales": 3,
     "IV - Trabajadores cualificados manuales": 4,
     "V - Trabajadores semicualificados": 5,
-    "VI - Trabajadores no cualificados": 6,
+    "VI - Trabajadores no cualificados": 6
 }
-
 
 MAP_SEVERIDAD_DEP = {
     "Ninguna / Mínima": 1,
     "Leve": 2,
     "Moderada": 3,
     "Moderadamente grave": 4,
-    "Grave": 5,
+    "Grave": 5
 }
-
 
 MAP_FUMA = {
     "Sí, fumo a diario": 1,
     "Sí, fumo pero no a diario": 2,
     "No fumo actualmente, pero he fumado antes (Exfumador)": 3,
-    "No fumo ni he fumado nunca": 4,
+    "No fumo ni he fumado nunca": 4
 }
-
 
 MAP_HUMO_AJENO = {
     "Nunca o casi nunca": 1,
     "Menos de 1 hora al día": 2,
     "De 1 a 5 horas al día": 3,
-    "Más de 5 horas al día": 4,
+    "Más de 5 horas al día": 4
 }
-
 
 MAP_VAPEO = {
     "A diario": 1,
     "De forma ocasional": 2,
     "En el pasado (ya no)": 3,
-    "Nunca": 4,
+    "Nunca": 4
 }
-
 
 MAP_ALCOHOL = {
     "A diario o casi a diario": 1,
@@ -282,32 +205,29 @@ MAP_ALCOHOL = {
     "2-3 días al mes": 5,
     "Una vez al mes": 6,
     "Menos de una vez al mes": 7,
-    "No en los últimos 12 meses / Nunca": 8,
+    "No en los últimos 12 meses / Nunca": 8
 }
-
 
 MAP_ACT_TRABAJO = {
     "Sentado la mayor parte de la jornada": 1,
     "De pie la mayor parte del tiempo sin grandes desplazamientos": 2,
     "Caminando, llevando algún peso o desplazándose con frecuencia": 3,
-    "Realizando tareas que requieren gran esfuerzo físico": 4,
+    "Realizando tareas que requieren gran esfuerzo físico": 4
 }
-
 
 MAP_EJERCICIO_OCIO = {
     "No hago ejercicio (tiempo libre casi completamente sedentario)": 1,
     "Hago alguna actividad física o deportiva ocasional": 2,
     "Hago actividad física varias veces al mes": 3,
-    "Hago entrenamiento deportivo o físico varias veces a la semana": 4,
+    "Hago entrenamiento deportivo o físico varias veces a la semana": 4
 }
-
 
 MAP_DIETA = {
     "A diario (1 o más veces al día)": 1,
     "De 4 a 6 veces por semana": 2,
     "De 1 a 3 veces por semana": 3,
     "Menos de una vez a la semana": 4,
-    "Nunca": 5,
+    "Nunca": 5
 }
 
 
@@ -318,9 +238,9 @@ MAP_DIETA = {
 st.title("🫀 Predictor de Riesgo de Enfermedad Cardiovascular")
 
 st.markdown(
-    "Herramienta de estimación estadística basada en modelos de aprendizaje "
-    "automático entrenados con la **Encuesta de Salud de España 2025 "
-    "(Ministerio de Sanidad)**."
+    "Herramienta de estimación estadística basada en modelos de "
+    "aprendizaje automático entrenados con la "
+    "**Encuesta de Salud de España 2025 (Ministerio de Sanidad)**."
 )
 
 st.divider()
@@ -335,9 +255,8 @@ modelo = cargar_modelo()
 if modelo is None:
 
     st.error(
-        "⚠️ **No se encontró el archivo del modelo (`models/final_model.pkl`).** "
-        "Ejecuta primero `python src/training.py` desde la raíz del proyecto "
-        "para entrenar y guardar el modelo."
+        "No se encontró el archivo `models/final_model.pkl`. "
+        "Comprueba que el modelo está guardado en la carpeta models."
     )
 
     st.stop()
@@ -349,7 +268,7 @@ if modelo is None:
 
 with st.sidebar:
 
-    st.header("👤 Perfil Demográfico y Físico")
+    st.header("👤 Perfil demográfico y físico")
 
     edad = st.slider(
         "Edad (años)",
@@ -370,7 +289,6 @@ with st.sidebar:
     col_p1, col_p2 = st.columns(2)
 
     with col_p1:
-
         peso_kg = st.number_input(
             "Peso (kg)",
             min_value=35.0,
@@ -380,7 +298,6 @@ with st.sidebar:
         )
 
     with col_p2:
-
         altura_cm = st.number_input(
             "Altura (cm)",
             min_value=120,
@@ -390,7 +307,6 @@ with st.sidebar:
         )
 
     imc = peso_kg / ((altura_cm / 100) ** 2)
-
     imc_cat = calcular_categoria_imc(imc)
 
     etiquetas_imc = {
@@ -419,24 +335,24 @@ with st.sidebar:
 
 
 # ============================================================
-# FORMULARIO PRINCIPAL EN PESTAÑAS
+# FORMULARIO PRINCIPAL: PESTAÑAS
 # ============================================================
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🩺 1. Antecedentes Clínicos",
-    "🚬 2. Tabaco y Alcohol",
-    "🏃 3. Actividad Física",
-    "🥗 4. Hábitos Alimentarios",
+    "🩺 1. Antecedentes clínicos",
+    "🚬 2. Tabaco y alcohol",
+    "🏃 3. Actividad física",
+    "🥗 4. Hábitos alimentarios"
 ])
 
 
-# ------------------------------------------------------------
+# ============================================================
 # TAB 1: ANTECEDENTES CLÍNICOS
-# ------------------------------------------------------------
+# ============================================================
 
 with tab1:
 
-    st.subheader("Patologías crónicas diagnosticadas y salud mental")
+    st.subheader("Patologías crónicas y salud mental")
 
     c1, c2, c3 = st.columns(3)
 
@@ -502,9 +418,9 @@ with tab1:
         )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # TAB 2: TABACO Y ALCOHOL
-# ------------------------------------------------------------
+# ============================================================
 
 with tab2:
 
@@ -540,9 +456,9 @@ with tab2:
         )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # TAB 3: ACTIVIDAD FÍSICA
-# ------------------------------------------------------------
+# ============================================================
 
 with tab3:
 
@@ -589,9 +505,9 @@ with tab3:
         )
 
 
-# ------------------------------------------------------------
+# ============================================================
 # TAB 4: HÁBITOS ALIMENTARIOS
-# ------------------------------------------------------------
+# ============================================================
 
 with tab4:
 
@@ -668,7 +584,7 @@ st.divider()
 # ============================================================
 
 if st.button(
-    "🔍 Calcular Riesgo Cardiovascular",
+    "🔍 Calcular riesgo cardiovascular",
     type="primary",
     use_container_width=True
 ):
@@ -713,7 +629,7 @@ if st.button(
         "dieta_comida_rapida": MAP_DIETA[dieta_comida_rapida],
         "dieta_aperitivos": MAP_DIETA[dieta_aperitivos],
 
-        # Otras variables categóricas
+        # Variables categóricas
         "nivel_estudios": MAP_ESTUDIOS[estudios_sel],
         "clase_social": MAP_CLASE_SOCIAL[clase_sel],
         "ejercicio_ocio": MAP_EJERCICIO_OCIO[ej_ocio_sel],
@@ -723,7 +639,7 @@ if st.button(
         "actividad_trabajo": MAP_ACT_TRABAJO[act_trabajo_sel],
         "vapeo": MAP_VAPEO[vapeo_sel],
         "humo_ajeno": MAP_HUMO_AJENO[humo_sel],
-        "imc_categoria": int(imc_cat),
+        "imc_categoria": int(imc_cat)
 
     }])
 
@@ -732,20 +648,33 @@ if st.button(
     # PREDICCIÓN
     # --------------------------------------------------------
 
-    resultado = modelo.predict_riesgo(datos_paciente).iloc[0]
+    try:
 
-    score = float(resultado["score"])
-    nivel = str(resultado["nivel"])
+        resultado = modelo.predict_riesgo(datos_paciente).iloc[0]
+
+        score = float(resultado["score"])
+        nivel = str(resultado["nivel"])
+
+        corte_bajo = modelo.cortes[0]
+        corte_alto = modelo.cortes[1]
+
+    except Exception as e:
+
+        st.error(
+            "No se ha podido realizar la predicción. "
+            "Comprueba que las variables introducidas coinciden "
+            "con las utilizadas para entrenar el modelo."
+        )
+
+        st.exception(e)
+        st.stop()
 
 
     # --------------------------------------------------------
-    # CLASIFICACIÓN DEL RIESGO
+    # INTERPRETACIÓN DEL RESULTADO
     # --------------------------------------------------------
 
     if nivel == "Riesgo Bajo":
-
-        css_class = "risk-low"
-        icono = "✅"
 
         recomendacion = (
             "El perfil presenta una estimación baja según el modelo. "
@@ -755,118 +684,106 @@ if st.button(
 
     elif nivel == "Riesgo Moderado":
 
-        css_class = "risk-mod"
-        icono = "⚠️"
-
         recomendacion = (
             "Se observa un nivel de riesgo intermedio según el modelo. "
-            "Conviene revisar los factores modificables, como la tensión arterial, "
-            "el perfil lipídico, el sedentarismo o el consumo de tabaco, "
-            "y realizar seguimiento en atención primaria."
+            "Conviene revisar los factores modificables, como la tensión "
+            "arterial, el perfil lipídico, el sedentarismo o el consumo "
+            "de tabaco, y realizar seguimiento en atención primaria."
         )
 
     else:
 
-        css_class = "risk-high"
-        icono = "🚨"
-
         recomendacion = (
-            "El modelo identifica una estimación elevada asociada al perfil introducido. "
-            "Se recomienda consultar con un profesional sanitario para valorar "
-            "los factores de riesgo y las medidas preventivas adecuadas."
+            "El modelo identifica una estimación elevada asociada al perfil "
+            "introducido. Se recomienda consultar con un profesional sanitario "
+            "para valorar los factores de riesgo y las medidas preventivas "
+            "adecuadas."
         )
-
-
-    # --------------------------------------------------------
-    # UMBRALES DEL MODELO
-    # --------------------------------------------------------
-
-    corte_bajo = modelo.cortes[0]
-    corte_alto = modelo.cortes[1]
-
-    activo_bajo = (
-        "activo" if nivel == "Riesgo Bajo" else ""
-    )
-
-    activo_mod = (
-        "activo" if nivel == "Riesgo Moderado" else ""
-    )
-
-    activo_alto = (
-        "activo" if nivel == "Riesgo Alto" else ""
-    )
 
 
     # --------------------------------------------------------
     # PRESENTACIÓN DE RESULTADOS
     # --------------------------------------------------------
 
+    st.divider()
+
+    st.header("📊 Resultado de la evaluación")
+
     col_res1, col_res2 = st.columns([1.2, 1.8])
 
 
     # --------------------------------------------------------
-    # COLUMNA IZQUIERDA: TARJETA Y SEMÁFORO
+    # COLUMNA IZQUIERDA: SCORE Y SEMÁFORO
     # --------------------------------------------------------
 
     with col_res1:
 
-        # Tarjeta principal
-        st.markdown(
-            f"""
-            <div class="risk-card {css_class}">
+        st.subheader("Resultado")
 
-                <h2 style="margin:0;">
-                    {icono} {nivel}
-                </h2>
+        if nivel == "Riesgo Bajo":
+            st.success("🟢 Riesgo Bajo")
 
-                <p style="
-                    font-size: 2.2rem;
-                    font-weight: bold;
-                    margin: 10px 0;
-                ">
-                    {score:.1%}
-                </p>
+        elif nivel == "Riesgo Moderado":
+            st.warning("🟡 Riesgo Moderado")
 
-                <p style="margin:0; font-size: 0.95rem;">
-                    Índice de riesgo estimado (Score)
-                </p>
+        else:
+            st.error("🔴 Riesgo Alto")
 
-            </div>
-            """,
-            unsafe_allow_html=True,
+
+        st.metric(
+            label="Índice de riesgo estimado",
+            value=f"{score:.1%}"
         )
 
-
-        # Barra de progreso
         st.progress(
             min(max(score, 0.0), 1.0)
         )
 
+        st.subheader("Semáforo de riesgo")
 
-        # Semáforo de riesgo
-        st.markdown(
-            f"""
-            <div class="semaforo-box">
 
-                <div class="semaforo-item sem-bajo {activo_bajo}">
-                    <span>🟢 Riesgo Bajo</span>
-                    <span>&lt; {corte_bajo:.0%}</span>
-                </div>
+        # Riesgo bajo
+        if nivel == "Riesgo Bajo":
 
-                <div class="semaforo-item sem-mod {activo_mod}">
-                    <span>🟡 Riesgo Moderado</span>
-                    <span>{corte_bajo:.0%} – {corte_alto:.0%}</span>
-                </div>
+            st.success(
+                f"🟢 RIESGO BAJO — inferior a {corte_bajo:.0%}"
+            )
 
-                <div class="semaforo-item sem-alto {activo_alto}">
-                    <span>🔴 Riesgo Alto</span>
-                    <span>&ge; {corte_alto:.0%}</span>
-                </div>
+        else:
 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            st.write(
+                f"🟢 Riesgo bajo: < {corte_bajo:.0%}"
+            )
+
+
+        # Riesgo moderado
+        if nivel == "Riesgo Moderado":
+
+            st.warning(
+                f"🟡 RIESGO MODERADO — "
+                f"{corte_bajo:.0%} a {corte_alto:.0%}"
+            )
+
+        else:
+
+            st.write(
+                f"🟡 Riesgo moderado: "
+                f"{corte_bajo:.0%} – {corte_alto:.0%}"
+            )
+
+
+        # Riesgo alto
+        if nivel == "Riesgo Alto":
+
+            st.error(
+                f"🔴 RIESGO ALTO — igual o superior a {corte_alto:.0%}"
+            )
+
+        else:
+
+            st.write(
+                f"🔴 Riesgo alto: ≥ {corte_alto:.0%}"
+            )
 
 
     # --------------------------------------------------------
@@ -881,13 +798,13 @@ if st.button(
 
         st.caption(
             f"Umbrales del clasificador: "
-            f"Riesgo Bajo (< {corte_bajo:.0%}) | "
-            f"Riesgo Moderado ({corte_bajo:.0%} – {corte_alto:.0%}) | "
-            f"Riesgo Alto (≥ {corte_alto:.0%})."
+            f"Bajo (< {corte_bajo:.0%}) | "
+            f"Moderado ({corte_bajo:.0%} – {corte_alto:.0%}) | "
+            f"Alto (≥ {corte_alto:.0%})."
         )
 
         st.warning(
-            "**⚠️ Estimación orientativa (no es un diagnóstico médico):** "
+            "**Estimación orientativa (no es un diagnóstico médico):** "
             "Este porcentaje refleja la puntuación generada por el modelo "
             "para el perfil introducido. No debe interpretarse como una "
             "probabilidad clínica real ni como una predicción individual "
@@ -900,9 +817,11 @@ if st.button(
 # AVISO FINAL
 # ============================================================
 
+st.divider()
+
 st.caption(
     "**Aviso:** Esta aplicación es una herramienta estadística de apoyo "
-    "basada en datos poblacionales (ESdE 2025) y **no sustituye** el criterio "
+    "basada en datos poblacionales (ESdE 2025) y no sustituye el criterio "
     "ni el diagnóstico de un profesional sanitario. La aplicación sigue "
     "en desarrollo y el resultado puede ser incorrecto."
 )
