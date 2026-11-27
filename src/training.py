@@ -37,19 +37,21 @@ CV = 5
 CORTES = (0.2, 0.5)
 MODELO_FINAL = "Regresión Logística"
 
+COLS_ELIMINADAS = ["cigarrillos_dia", "apoyo_personas", "frec_atracon_alcohol", "ccaa"]
+
 # ---------------------------------------------------------------- columnas
 COLS_RIESGO = ["tension_alta", "colesterol_alto", "diabetes", "epoc", "problemas_rinon",
                "migrana", "tumor_maligno", "depresion", "ansiedad", "otros_problemas_mentales"]
 COLS_DIETA = ["dieta_fruta", "dieta_verdura", "dieta_legumbres", "dieta_pescado",
               "dieta_carne_procesada", "dieta_dulces", "dieta_refrescos",
               "dieta_comida_rapida", "dieta_aperitivos"]
-COLS_NUM = ["edad", "imc", "sentado_h", "cigarrillos_dia",
+COLS_NUM = ["edad", "imc", "sentado_h",
             "dias_camina", "dias_deporte", "dias_fuerza"]
 COLS_BIN = ["mujer"]
 COLS_CAT = (COLS_RIESGO + COLS_DIETA +
             ["nivel_estudios", "clase_social", "ejercicio_ocio", "severidad_depresiva",
-             "apoyo_personas", "fuma", "frec_alcohol", "frec_atracon_alcohol",
-             "actividad_trabajo", "vapeo", "humo_ajeno", "imc_categoria", "ccaa"])
+             "fuma", "frec_alcohol",
+             "actividad_trabajo", "vapeo", "humo_ajeno", "imc_categoria"])
 
 
 # ------------------------------------------------------------------- datos
@@ -60,7 +62,7 @@ def cargar_y_dividir():
     print(df["ecv"].value_counts(normalize=True).round(3))
 
     # 'factor' es el peso muestral de la encuesta: no es un predictor
-    X = df.drop(columns=["ecv", "factor"])
+    X = df.drop(columns=["ecv", "factor", *COLS_ELIMINADAS], errors="ignore")
     y = df["ecv"]
 
     X_train, X_test, y_train, y_test = train_test_split(
